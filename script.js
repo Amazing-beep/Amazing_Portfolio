@@ -5,7 +5,7 @@ const backToTopBtn = document.getElementById('backToTop');
 const header = document.querySelector('.header');
 const sections = document.querySelectorAll('section');
 const navItems = document.querySelectorAll('.nav-links a');
-const form = document.getElementById('contactForm');
+const statNumbers = document.querySelectorAll('.stat-number');
 
 // Mobile Navigation Toggle
 function toggleMenu() {
@@ -100,88 +100,37 @@ function setActiveNavLink() {
 
 window.addEventListener('scroll', setActiveNavLink);
 
-// Form Submission
-if (form) {
-    form.addEventListener('submit', handleSubmit);
-}
-
-async function handleSubmit(e) {
-    e.preventDefault();
-    
-    const formData = new FormData(form);
-    const data = Object.fromEntries(formData);
-    const submitBtn = form.querySelector('button[type="submit"]');
-    const submitBtnText = submitBtn.innerHTML;
-    
-    // Simple validation
-    if (!data.name || !data.email || !data.message) {
-        showAlert('Please fill in all fields', 'error');
-        return;
-    }
-    
-    if (!isValidEmail(data.email)) {
-        showAlert('Please enter a valid email address', 'error');
-        return;
-    }
-    
-    // Disable button and show loading state
-    submitBtn.disabled = true;
-    submitBtn.innerHTML = 'Sending...';
-    
-    try {
-        // Replace with your form submission logic
-        // Example: await fetch('your-api-endpoint', { method: 'POST', body: JSON.stringify(data) });
+// Animated Counter for Stats
+function animateCounters() {
+    statNumbers.forEach(stat => {
+        const target = parseInt(stat.getAttribute('data-target'));
+        const duration = 2000;
+        const increment = target / (duration / 16);
+        let current = 0;
         
-        // Simulate API call
-        await new Promise(resolve => setTimeout(resolve, 1500));
+        const updateCounter = () => {
+            current += increment;
+            if (current < target) {
+                stat.textContent = Math.floor(current).toLocaleString();
+                requestAnimationFrame(updateCounter);
+            } else {
+                stat.textContent = target.toLocaleString();
+            }
+        };
         
-        // Show success message
-        showAlert('Message sent successfully!', 'success');
-        form.reset();
-    } catch (error) {
-        console.error('Error:', error);
-        showAlert('Failed to send message. Please try again.', 'error');
-    } finally {
-        // Re-enable button and reset text
-        submitBtn.disabled = false;
-        submitBtn.innerHTML = submitBtnText;
-    }
+        // Start animation when element is in viewport
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    updateCounter();
+                    observer.unobserve(entry.target);
+                }
+            });
+        }, { threshold: 0.5 });
+        
+        observer.observe(stat);
+    });
 }
 
-function isValidEmail(email) {
-    const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return re.test(String(email).toLowerCase());
-}
-
-function showAlert(message, type = 'success') {
-    // Remove any existing alerts
-    const existingAlert = document.querySelector('.alert');
-    if (existingAlert) {
-        existingAlert.remove();
-    }
-    
-    const alert = document.createElement('div');
-    alert.className = `alert alert-${type}`;
-    alert.textContent = message;
-    alert.style.cssText = `
-        position: fixed;
-        top: 100px;
-        right: 20px;
-        padding: 1rem 2rem;
-        border-radius: 8px;
-        background: ${type === 'success' ? '#10b981' : '#ef4444'};
-        color: white;
-        z-index: 10000;
-        animation: slideIn 0.3s ease;
-    `;
-    
-    document.body.appendChild(alert);
-    
-    // Auto-remove after 5 seconds
-    setTimeout(() => {
-        alert.style.animation = 'slideOut 0.3s ease';
-        setTimeout(() => {
-            alert.remove();
-        }, 300);
-    }, 5000);
-}
+// Initialize animated counters
+animateCounters();
